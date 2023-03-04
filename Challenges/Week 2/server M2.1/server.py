@@ -25,6 +25,7 @@ class ECBEncOracle(CommandServer):
     def generate_secret_string(self):
         message_len = secrets.randbelow(32) + 1
         self.message = ''.join(secrets.choice(ALPHABET) for _ in range(message_len))
+        print(self.message)
 
     @on_command("encrypt")
     def encrypt_handler(self, msg):

@@ -13,7 +13,7 @@ import json
 REMOTE = True
 
 # Remember to change the port if you are re-using this client for other challenges
-PORT = 50221
+PORT = 50222
 
 if REMOTE:
     host = "aclabs.ethz.ch"
@@ -62,10 +62,10 @@ def solveM20():
 
 # Task M2.1
 
-def enc_req(body : str):
+def enc_req(body : bytes):
     request = {
         "command": "encrypt",
-        "prepend_pad" : body,
+        "prepend_pad" : body.hex(),
     }
     json_send(request)
 
@@ -74,36 +74,44 @@ def enc_req(body : str):
 def solveM21():
 
     for i in range(5):
-        z=""
-
+        z=b""
         print(enc_req(z)["res"])
         
         l = int(len(enc_req(z)["res"]))
         print(l/2)
+
+
         for y, _ in enumerate([i for i in range(0, l, 32)]):
             for x in range(15, -1, -1):
-                prep = ("0"*x).encode("utf-8").hex()+z
-                print(len(prep)/2)
+                prep = (b"0"*x)
+                # print(len(prep)/2)
                 r1 = enc_req(prep)
+                # print(r1)
                 for j in range(256):
-                    r2 = enc_req(prep + int.to_bytes(j, 1, "big").hex())
+                    # print(j)
+                    # print(prep + int.to_bytes(j, 1, "big"))
+                    r2 = enc_req(prep + z + int.to_bytes(j, 1, "big"))
+                    
                     if r2["res"][:y*32+32] == r1["res"][:y*32+32]:
-                        z += int.to_bytes(j, 1, "big").hex()
+                        z += int.to_bytes(j, 1, "big")
                         print(z)
+                        # if(x == 14):
+                        #     exit()
                         break
-        # print(enc_req(z)["res"])
-        c = z[-2:]
+                
+        print(enc_req(z)["res"])
+        c = z[-2:-1]
+        print(c)
 
-        print(bytes.fromhex(c).decode("utf-8"))
         request = {
             "command": "solve",
-            "solve" : bytes.fromhex(c).decode("utf-8")
+            "solve" : c.decode("utf-8")
         }
         json_send(request)
         response = json_recv()
         print(response)
-        break
         
-    # print(json_recv())
+        
+    print(json_recv())
         
 solveM21()
