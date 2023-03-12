@@ -5,7 +5,7 @@ import telnetlib
 import json
 from Crypto.Util.Padding import pad, unpad
 
-server = "localhost" #"aclabs.ethz.ch"
+server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 50340)
 
 def readline():
@@ -24,16 +24,34 @@ def byte_xor(ba1, ba2):
 
 # print(pad(b'message',16)[:-1])
 
+# for i in range(300):
+    # for j in range(255):
 for i in range(300):
-    for j in range(255):
+    guess = True
+    request = {
+        'command': 'decrypt', 
+        'ciphertext': int.to_bytes(i, 16, "big").hex()
+    }
+    json_send(request)
 
-        request = {
-            'command': 'decrypt', 
-            'encrypted_command': (pad(b'message', 16)[:-1]+j.to_bytes(1, "big")).hex()
-        }
-        json_send(request)
+    response = json_recv()
+    print(response["res"].encode())
+    print(len(response["res"].encode()))
+    if len(response["res"].encode()) == 32:
+        guess = False
+    print(guess)
+    request = {
+        'command': 'guess', 
+        'guess': guess
+    }
+    json_send(request)
+    response = json_recv()
+    print(response)
+            
+request = {
+    'command': 'flag', 
+}
+json_send(request)
+response = json_recv()
+print(response)
 
-        response = json_recv()
-
-        print(response)
-    break

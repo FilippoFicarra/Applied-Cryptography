@@ -40,6 +40,7 @@ class PaddingOracle(CommandServer):
         if check and any(self.ctxt_db.get(ctxt_block) for ctxt_block in ctxt_blocks):
             raise ValueError("You cannot just reflect or repeat ct blocks.")
 
+
         for ctxt_block in ctxt_blocks:
             self.ctxt_db[ctxt_block] = True
 
@@ -54,6 +55,7 @@ class PaddingOracle(CommandServer):
     def decrypt_handler(self, msg):
         try:
             ciphertext = bytes.fromhex(msg["ciphertext"])
+
             self.ctxt_check(ciphertext)
             iv = ciphertext[: self.block_size]
             ctxt = ciphertext[self.block_size :]
@@ -71,7 +73,8 @@ class PaddingOracle(CommandServer):
 
             self.send_encrypted_message("Hello!")
         except (KeyError, ValueError) as e:
-            print("compà")
+            print("Hello my friend this is the exception")
+            print("exc : ", e)
             self.send_encrypted_message(repr(e))
 
     @on_command("guess")
@@ -80,6 +83,7 @@ class PaddingOracle(CommandServer):
             self.send_message({"res": "A guess is required."})
             return
         padding_error_guess = msg["guess"]
+        print("Padding error guess : ", padding_error_guess)
 
         if self.padding_error != padding_error_guess or self.padding_error is None:
             self.send_message({"res": "You lost"})
