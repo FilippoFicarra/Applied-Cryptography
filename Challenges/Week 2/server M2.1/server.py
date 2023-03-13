@@ -18,16 +18,16 @@ class ECBEncOracle(CommandServer):
         super().__init__(*args, **kwargs)
 
     def encrypt(self, plaintext: bytes):
-        padded_plaintext = pad(plaintext, self.cipher.block_size)
+        padded_plaintext = pad(plaintext, self.cipher.block_size) # type: ignore
         return self.cipher.encrypt(padded_plaintext)
 
-    @on_startup()
+    @on_startup() # type: ignore
     def generate_secret_string(self):
         message_len = secrets.randbelow(32) + 1
         self.message = ''.join(secrets.choice(ALPHABET) for _ in range(message_len))
         print(self.message)
 
-    @on_command("encrypt")
+    @on_command("encrypt") # type: ignore
     def encrypt_handler(self, msg):
         try:
             prepend_pad = bytes.fromhex(msg["prepend_pad"])
@@ -36,7 +36,7 @@ class ECBEncOracle(CommandServer):
         except Exception as e:
             self.send_message({"error": f"Invalid parameters: {e}"})
 
-    @on_command("solve")
+    @on_command("solve") # type: ignore
     def solve_handler(self, msg):
         try:
             solve = msg["solve"]
