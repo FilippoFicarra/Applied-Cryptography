@@ -25,8 +25,9 @@ class Server(CommandServer):
         cipher = AES.new(self.k, AES.MODE_CBC)
         ctxt = cipher.encrypt(pad(msg.encode(), self.block_size))
         encrypted_res = cipher.iv + ctxt # type: ignore
-        # if "No such command. But here's a flag for you:" in msg:
-        #     print(msg, len(bytes.fromhex(encrypted_res.hex())), encrypted_res.hex())
+        # if len(encrypted_res) == 96:
+        if "No such command. But here's a flag for you:" in msg:
+            print(msg, len(bytes.fromhex(encrypted_res.hex())), encrypted_res.hex())
         self.send_message({"res": encrypted_res.hex()})
 
     def ls_handler(self):
@@ -44,7 +45,6 @@ class Server(CommandServer):
             encrypted_command = bytes.fromhex(msg["encrypted_command"])
             iv = encrypted_command[:self.block_size]
             ctxt = encrypted_command[self.block_size:]
-
             cipher = AES.new(self.k, AES.MODE_CBC, iv = iv)
             command = unpad(cipher.decrypt(ctxt), self.block_size).decode()
             command_parts = command.split(" ")

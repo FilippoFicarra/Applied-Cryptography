@@ -4,16 +4,10 @@
 import telnetlib
 import json
 from Crypto.Util.Padding import pad, unpad
-import time
-from string import ascii_letters, digits, punctuation
-
-ALPHABET = ascii_letters + digits + punctuation
-printable_chars = bytes(ALPHABET, 'ascii')
-for i in range(1,17):
-     printable_chars += i.to_bytes(1,"big")
+from tqdm import tqdm
 
 
-server = "localhost" #"aclabs.ethz.ch"
+server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 50343)
 
 def readline():
@@ -46,12 +40,10 @@ def block_crack(full_message_blocks, l):
             json_send(request)
 
             response = json_recv()
-            k = len(bytes.fromhex(response["res"]))
 
-            if k == 96 and k != 144 and k != 128 :
+            if len(response["res"]) != 128 :
                 found = full_message_blocks[l][-j:]
-                g = byte_xor(byte_xor(found, int.to_bytes(j,1,"big")*j),a[-j:])
-                print(g)
+                break
 
             
     message = byte_xor(byte_xor(full_message_blocks[l], int.to_bytes(16,1,"big")*16),a)
@@ -61,43 +53,36 @@ def block_crack(full_message_blocks, l):
          
 
 def get_challenge():
-    challenge = ''
-
-    for i in range(256):
-        request = {
+    request = {
             'command' : 'encrypted_command',
-            'encrypted_command' : i.to_bytes(32, "big").hex()
+            'encrypted_command' : int.to_bytes(0, 32, "big").hex()
         }
-        json_send(request)
+    json_send(request)
 
-        response = json_recv()
-        k = len(bytes.fromhex(response["res"]))
-        if k == 96 and k != 144 and k != 128 :
-            challenge = response["res"]
-            print("Challenge : ", challenge,  len(challenge)/2)
-            
-            
-    challenge = bytes.fromhex(challenge)
-    return challenge
+    response = json_recv()
+
+    request = {
+            'command' : 'encrypted_command',
+            'encrypted_command' : response["res"]
+        }
+    json_send(request)
+
+    response = json_recv()
+
+    return bytes.fromhex(response["res"])
 
 
 challenge = get_challenge()
+
 blocks = [challenge[i:i+16] for i in range(0,len(challenge),16)]
 l = len(blocks)
 message = []
-m = b''
-for i in range(l-2, -1, -1):
+
+print("Cracking the code : ...")
+for i in tqdm(range(l-2, -1, -1)):
     crack = block_crack(blocks[:i+2], i)
-    print(crack)
     message.append(crack)
-    
-    
 
-print("RESULT : ")
-print(message)
-try:
-    print(unpad(b"".join(reversed(message)),16))
-except:
-     print(b"".join(reversed(message)))
-
+print("Flag : ")
+print(unpad(b"".join(reversed(message)),16).decode())
 
