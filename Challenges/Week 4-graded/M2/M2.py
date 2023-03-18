@@ -27,6 +27,8 @@ def solve():
     json_send(request)
 
     response = json_recv()
+    print(response)
+    print()
 
     flag_m0 = response["m0"]
     flag_c0 = response["c0"]
@@ -37,27 +39,29 @@ def solve():
     
     request = {
         'command' : 'decrypt',
-        'm0' : flag_m0,
-        'c0' : flag_c0,
-        'ctxt' : flag_ctxt,
+        'm0' : '00'*16,
+        'c0' : '00'*16,
+        'ctxt' : '00'*16,
     }
+
     json_send(request)
 
     response = json_recv()
 
     print(response)
 
-    request = {
-        'command' : 'decrypt',
-        'ctxt' : '',
-        'm0' : '',
-        'c0' : '',
-    }
-    json_send(request)
 
-    response = json_recv()
+    # request = {
+    #     'command' : 'decrypt',
+    #     'ctxt' : flag_ctxt,
+    #     'm0' : flag_m0,
+    #     'c0' : flag_c0,
+    # }
+    # json_send(request)
 
-    print(response)
+    # response = json_recv()
+
+    # print(response)
 
     # return response["res"]
 
