@@ -1,6 +1,6 @@
 import telnetlib
 import json
-from datetime import datetime, timezone
+# from datetime import datetime, timezone
 import time
 
 
@@ -39,32 +39,36 @@ def solve():
     ctxt = response["ctxt"]
 
     print(f"m0: {m0}\nc0: {c0}\nctxt: {ctxt}")
+
     request = {
         'command' : 'metadata_leak',
         'm0' : m0,
         'c0' : c0,
-        'ctxt' : ctxt,
+        'ctxt' : ctxt[:32] + ctxt[64:] 
     }
     json_send(request)
-
     response = json_recv()
 
-    response = response['metadata'].split(' ')
+    print(response)
 
-    sender = response[5]
+    try:
+        metadata = response['metadata'].split(' ')
 
-    receiver = response[7]
-    receiver = receiver[:len(receiver)-1]
+        sender = metadata[5]
 
-    time = response[-1]
-    time = time[:len(time)-1]
+        receiver = metadata[7]
+        receiver = receiver[:len(receiver)-1]
 
-    version = response[2]
+        time_stamp = metadata[-1]
+        time_stamp = time_stamp[:len(time_stamp)-1]
+
+        version = metadata[2]
+
+        print(f"Sender {sender}, receiver {receiver}, time_stamp {time_stamp}, version {version}")
+    except:
+        print(response)
 
 
-
-    print(f"Sender {sender}, receiver {receiver}, time {time}, version {version}")
- 
 
 
     

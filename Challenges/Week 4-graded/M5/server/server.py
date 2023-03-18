@@ -71,6 +71,8 @@ class Message:
         protocol_maj_version = int.from_bytes(metadata[12:14], "little")
         protocol_min_version = metadata[14]
 
+        print(stream)
+
         # Represents the amount of blocks of additional metadata that we have to parse
         additional_metadata_len = metadata[15]
         remaining_stream = stream[32:]
@@ -80,6 +82,7 @@ class Message:
 
         additional_metadata = remaining_stream[: additional_metadata_len * 16]
         content = remaining_stream[additional_metadata_len * 16 :]
+
 
         return cls(
             sender,

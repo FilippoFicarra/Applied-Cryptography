@@ -32,6 +32,7 @@ class PRFServer(CommandServer):
         self.close_connection()
 
     def encrypt(self, msg: bytes):
+        # print("Key: " + self.key.hex())
         lkey = SHA256.new(self.key[:2]).digest()
         rkey = SHA256.new(self.key[2:]).digest()
 
@@ -90,6 +91,7 @@ class PRFServer(CommandServer):
 
         try:
             b = int(msg["b"])
+            print(b, self.bit)
             if b == self.bit:
                 self.score += 1
                 self.initialize_new_round()
