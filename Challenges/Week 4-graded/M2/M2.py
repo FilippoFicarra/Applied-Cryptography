@@ -5,7 +5,7 @@ import telnetlib
 import json
 from Crypto.Util.Padding import pad, unpad
 
-server = "localhost" #"aclabs.ethz.ch"
+server = "localhost"#"aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 50402)
 
 def readline():
@@ -27,21 +27,20 @@ def solve():
     json_send(request)
 
     response = json_recv()
-    print(response)
-    print()
+    # print(response)
+    
 
     flag_m0 = response["m0"]
     flag_c0 = response["c0"]
     flag_ctxt = response["ctxt"]
 
-
     # print(f"m0: {flag_m0}, c0: {flag_c0}, ctxt: {flag_ctxt}")
     
     request = {
         'command' : 'decrypt',
-        'm0' : '00'*16,
-        'c0' : '00'*16,
-        'ctxt' : '00'*16,
+        'm0' : flag_m0,
+        'c0' : flag_c0,
+        'ctxt' : flag_ctxt,
     }
 
     json_send(request)
@@ -49,7 +48,6 @@ def solve():
     response = json_recv()
 
     print(response)
-
 
     # request = {
     #     'command' : 'decrypt',

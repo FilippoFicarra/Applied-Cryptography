@@ -58,7 +58,6 @@ class IGEServer(CommandServer):
             c_prev = ctxt_block
 
             out_blocks.append(ptxt_block)
-
         return unpad(b"".join(out_blocks), bs)
 
     @on_command("flag") # type: ignore
