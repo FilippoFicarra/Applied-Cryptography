@@ -57,8 +57,6 @@ def solve():
         except:
             pass
 
-    print(encrypted_flag_response)
-
 
     for i in range(2, len(resp_blocks)-2): # type: ignore
         D_K = find_dk(encrypted_flag_response[i-2].encode().hex())
