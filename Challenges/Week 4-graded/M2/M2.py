@@ -5,7 +5,7 @@ import telnetlib
 import json
 from Crypto.Util.Padding import pad, unpad
 
-server = "localhost"#"aclabs.ethz.ch"
+server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 50402)
 
 def readline():
@@ -40,7 +40,7 @@ def solve():
         'command' : 'decrypt',
         'm0' : flag_m0,
         'c0' : flag_c0,
-        'ctxt' : flag_ctxt,
+        'ctxt' : flag_ctxt[:len(flag_ctxt)-1]+"00",
     }
 
     json_send(request)
