@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-# from https://cryptohack.org/challenges/introduction/
-
 import telnetlib
 import json
-from Crypto.Util.Padding import pad, unpad
 
 server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 50401)

@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-# from https://cryptohack.org/challenges/introduction/
-
 import telnetlib
 import json
-from Crypto.Util.Padding import pad, unpad
 
 def blockify(a):
     return [a[i : i + 16] for i in range(0, len(a), 16)]
