@@ -75,16 +75,12 @@ def solve():
 
     response = json_recv()
 
-    print(response["flag"])
-
-
-
-
+    return response["flag"]
 
 
 if __name__ == "__main__":
     flag = solve()
-    # print(flag)
+    print(flag)
     
 
 
