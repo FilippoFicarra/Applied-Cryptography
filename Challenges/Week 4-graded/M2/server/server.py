@@ -25,6 +25,7 @@ class IGEServer(CommandServer):
         c0 = secrets.token_bytes(bs)
 
         msg = pad(msg, bs)
+        print(msg)
         msg_blocks = [msg[i : i + bs] for i in range(0, len(msg), bs)]
 
         out_blocks = []
@@ -42,7 +43,7 @@ class IGEServer(CommandServer):
 
         return m0, c0, b"".join(out_blocks)
 
-    def decrypt(self, m0, c0, ctxt):
+    def  decrypt(self, m0, c0, ctxt):
         bs = self.cipher.block_size # type: ignore
         ctxt_blocks = [ctxt[i : i + bs] for i in range(0, len(ctxt), bs)]
 
@@ -58,6 +59,11 @@ class IGEServer(CommandServer):
             c_prev = ctxt_block
 
             out_blocks.append(ptxt_block)
+        try:
+            unpad(b"".join(out_blocks), bs)
+            # print(b"".join(out_blocks))
+        except:
+            pass
         return unpad(b"".join(out_blocks), bs)
 
     @on_command("flag") # type: ignore
@@ -91,5 +97,5 @@ class IGEServer(CommandServer):
 
 
 if __name__ == "__main__":
-    flag = "flag{very_looong_test_flag}"
+    flag = "little_but_very_little_flag_"#"flag{very_looong_test_flag}"
     IGEServer.start_server("0.0.0.0", 50402, flag=flag)

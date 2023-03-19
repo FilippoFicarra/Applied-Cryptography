@@ -2,7 +2,6 @@ import telnetlib
 import json
 
 
-
 def blockify(a):
     return [a[i : i + 16] for i in range(0, len(a), 16)]
 

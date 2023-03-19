@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# from https://cryptohack.org/challenges/introduction/
-
 import telnetlib
 import json
 from Crypto.Util.Padding import pad, unpad
@@ -20,52 +17,76 @@ def json_send(req):
     tn.write(request + b"\n")
 
 
+def byte_xor(ba1, ba2):
+    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
+
+def block_crack(full_message_blocks, flag_m0):
+    found  = b''
+    a = full_message_blocks[0]
+    for j in range(1,17):
+        found = byte_xor(byte_xor(found, (j-1).to_bytes(1, "big")*(j-1)),j.to_bytes(1,"big")*(j-1))
+        b = full_message_blocks[0][:16-j] if 16-j > 0 else b''
+        for i in range(256):
+            full_message_blocks[0] = (b + i.to_bytes(1, "big") + found)[:16]
+            
+            request = {
+                'command' : 'decrypt', 
+                'm0' : flag_m0,
+                'c0' : (b + i.to_bytes(1, "big") + found)[:16].hex(),
+                'ctxt' : b''.join(full_message_blocks[1:]).hex()
+               
+            }
+            json_send(request)
+
+            response = json_recv()
+            try:
+                res = response["res"] 
+                found = full_message_blocks[0][-j:]
+                z = byte_xor(byte_xor(found, j.to_bytes(1, "big")*j),a[-j:])
+                # bug to fix
+                break
+            except:
+                pass
+
+
+    message = byte_xor(byte_xor(full_message_blocks[0], int.to_bytes(16,1,"big")*16),a)
+    # print(message)
+    full_message_blocks[0] = a
+    return message
+
+
 def solve():
+
     request = {
         'command' : 'flag',
     }
     json_send(request)
 
     response = json_recv()
-    # print(response)
     
 
     flag_m0 = response["m0"]
     flag_c0 = response["c0"]
     flag_ctxt = response["ctxt"]
 
-    # print(f"m0: {flag_m0}, c0: {flag_c0}, ctxt: {flag_ctxt}")
+
+    blocks = [bytes.fromhex(flag_c0)]+[bytes.fromhex(flag_ctxt[i:i+32]) for i in range(0,len(flag_ctxt),32)]
     
-    request = {
-        'command' : 'decrypt',
-        'm0' : flag_m0,
-        'c0' : flag_c0,
-        'ctxt' : flag_ctxt[:len(flag_ctxt)-1]+"00",
-    }
+    message = []
+    c0 = flag_c0
+    m0 = flag_m0
+    for i in range(len(blocks)-1):
+        crack = block_crack(blocks[i:i+2], m0)
+        message.append(crack)
+        m0 = crack.hex()
+    
+    return unpad(b"".join(message), 16).decode()
+        
 
-    json_send(request)
-
-    response = json_recv()
-
-    print(response)
-
-    # request = {
-    #     'command' : 'decrypt',
-    #     'ctxt' : flag_ctxt,
-    #     'm0' : flag_m0,
-    #     'c0' : flag_c0,
-    # }
-    # json_send(request)
-
-    # response = json_recv()
-
-    # print(response)
-
-    # return response["res"]
 
 if __name__ == "__main__":
     flag = solve()
-    # print(flag)
+    print(flag)
     
 
 

@@ -22,7 +22,7 @@ def json_send(req):
     tn.write(request + b"\n")
 
 def byte_xor(ba1, ba2):
-            return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
+    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 def block_crack(full_message_blocks, l):
     found  = b''
@@ -44,8 +44,6 @@ def block_crack(full_message_blocks, l):
             if len(response["res"]) != 128 :
                 found = full_message_blocks[l][-j:]
                 break
-
-            
     message = byte_xor(byte_xor(full_message_blocks[l], int.to_bytes(16,1,"big")*16),a)
 
     full_message_blocks[l] = a

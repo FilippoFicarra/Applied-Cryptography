@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# from https://cryptohack.org/challenges/introduction/
-
 import telnetlib
 import json
 from Crypto.Cipher import AES
@@ -26,8 +23,7 @@ def byte_xor(ba1, ba2):
 
 def solve():
     for i in range(64):
-        # ciphers = {}
-        # for j in range(10):
+
         request = {
         'command' : 'query',
         'm' : int.to_bytes(0,16, "big").hex()
