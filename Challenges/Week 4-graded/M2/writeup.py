@@ -97,10 +97,7 @@ def solve():
         crack = block_crack(blocks[i:i+2], m0, i == len(blocks)-2)
         message.append(crack)
         m0 = crack.hex()
-        
-        
-        
-    print(message)
+
     return unpad(b"".join(message),16).decode()
         
 
