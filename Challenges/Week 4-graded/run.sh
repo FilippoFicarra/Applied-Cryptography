@@ -9,9 +9,9 @@ fi
 counter=1
 total=0
 
-echo "Running $1 15 times..."
+echo "Running $1 20 times..."
 
-while [ $counter -le 100 ]
+while [ $counter -le 20 ]
 do
     echo "Iteration $counter"
 

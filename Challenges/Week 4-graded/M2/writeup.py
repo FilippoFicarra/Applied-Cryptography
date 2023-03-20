@@ -21,7 +21,7 @@ def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
-def block_crack(full_message_blocks, flag_m0):
+def block_crack(full_message_blocks, flag_m0, last_block):
     found  = b''
     a = full_message_blocks[0]
 
@@ -45,7 +45,7 @@ def block_crack(full_message_blocks, flag_m0):
             try:
                 res = response["res"] 
                 try :
-                    if j == 1:
+                    if j == 1 and last_block:
                         l = len(b)-1 if len(b) > 1 else 0
                         c = (i-1).to_bytes(1,"big") if len(b) > 0 else b''
                         request = {
@@ -94,13 +94,13 @@ def solve():
     c0 = flag_c0
     m0 = flag_m0
     for i in range(len(blocks)-1):
-        crack = block_crack(blocks[i:i+2], m0)
+        crack = block_crack(blocks[i:i+2], m0, i == len(blocks)-2)
         message.append(crack)
         m0 = crack.hex()
         
         
         
-    
+    print(message)
     return unpad(b"".join(message),16).decode()
         
 
@@ -108,6 +108,7 @@ def solve():
 if __name__ == "__main__":
     flag = solve()
     print(flag)
+    print("-"*80)
     
 
 
