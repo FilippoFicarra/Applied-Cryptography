@@ -53,17 +53,15 @@ class IGEServer(CommandServer):
 
         for ctxt_block in ctxt_blocks:
             n = xor(ctxt_block, m_prev)
+            # if self.cipher.decrypt(n).endswith(b"\x00"):
+            print(ctxt_block, self.cipher.decrypt(n))
+ 
             ptxt_block = xor(self.cipher.decrypt(n), c_prev)
 
             m_prev = ptxt_block
             c_prev = ctxt_block
 
             out_blocks.append(ptxt_block)
-        try:
-            unpad(b"".join(out_blocks), bs)
-            # print(b"".join(out_blocks))
-        except:
-            pass
         return unpad(b"".join(out_blocks), bs)
 
     @on_command("flag") # type: ignore
@@ -97,5 +95,5 @@ class IGEServer(CommandServer):
 
 
 if __name__ == "__main__":
-    flag = "little_but_very_little_flag_"#"flag{very_looong_test_flag}"
+    flag = "flag{very_looong_test_flag}"
     IGEServer.start_server("0.0.0.0", 50402, flag=flag)
