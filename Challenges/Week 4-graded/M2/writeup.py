@@ -64,10 +64,8 @@ def block_crack(full_message_blocks, flag_m0):
                     break
                 except:
                     pass
-                    # print("padded wrongly")
             except:
                 pass
-                # print("not padded", i)
 
 
     message = byte_xor(byte_xor(full_message_blocks[0], int.to_bytes(16,1,"big")*16),a)
