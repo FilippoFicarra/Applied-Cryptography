@@ -105,7 +105,6 @@ def solve():
 if __name__ == "__main__":
     flag = solve()
     print(flag)
-    print("-"*80)
     
 
 
