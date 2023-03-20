@@ -24,7 +24,7 @@ def json_send(req):
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
-def block_crack(full_message_blocks, l):
+def block_crack(full_message_blocks, l, last_block = False):
     found  = b''
     a = full_message_blocks[l]
     for j in range(1,17):
@@ -40,8 +40,17 @@ def block_crack(full_message_blocks, l):
             json_send(request)
 
             response = json_recv()
-
+            
             if len(response["res"]) != 128 :
+                if last_block and j == 1:
+                    request = {
+                        'command' : 'encrypted_command', 
+                        'encrypted_command': b''.join(full_message_blocks).hex() 
+                    }
+                    json_send(request)
+                    if len(response["res"]) != 128 :
+                        found = full_message_blocks[l][-j:]
+                        break
                 found = full_message_blocks[l][-j:]
                 break
     message = byte_xor(byte_xor(full_message_blocks[l], int.to_bytes(16,1,"big")*16),a)
@@ -78,7 +87,7 @@ message = []
 
 print("Cracking the code : ...")
 for i in tqdm(range(l-2, -1, -1)):
-    crack = block_crack(blocks[:i+2], i)
+    crack = block_crack(blocks[:i+2], i, i == l-2)
     message.append(crack)
 
 print("Flag : ")
