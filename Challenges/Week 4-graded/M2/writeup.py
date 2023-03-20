@@ -16,10 +16,8 @@ def json_send(req):
     request = json.dumps(req).encode()
     tn.write(request + b"\n")
 
-
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
-
 
 def block_crack(full_message_blocks, flag_m0, last_block):
     found  = b''

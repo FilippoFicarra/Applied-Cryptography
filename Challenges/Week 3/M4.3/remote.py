@@ -41,11 +41,14 @@ def block_crack(full_message_blocks, l, last_block = False):
 
             response = json_recv()
             
+            l = len(b)-1 if len(b) > 1 else 0
+            c = (i-1).to_bytes(1,"big") if len(b) > 0 else b''
+
             if len(response["res"]) != 128 :
                 if last_block and j == 1:
                     request = {
                         'command' : 'encrypted_command', 
-                        'encrypted_command': b''.join(full_message_blocks).hex() 
+                        'encrypted_command': (b[:l] + c + i.to_bytes(1, "big") + found)[:16].hex(), 
                     }
                     json_send(request)
                     if len(response["res"]) != 128 :
