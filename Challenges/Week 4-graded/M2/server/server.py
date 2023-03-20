@@ -25,7 +25,6 @@ class IGEServer(CommandServer):
         c0 = secrets.token_bytes(bs)
 
         msg = pad(msg, bs)
-        print(msg)
         msg_blocks = [msg[i : i + bs] for i in range(0, len(msg), bs)]
 
         out_blocks = []
