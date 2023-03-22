@@ -78,7 +78,7 @@ def solve():
     proto_xor_c2_xor_additional_enc = byte_xor(byte_xor(bytes.fromhex(ctxt[64:96]), metadata), proto_header) 
                                                                                                                 
     
-    # I send the max number of blocks (max number in 1 byte)
+    # I send the max number of blocks (max number that can be encoded with 1 byte(255))
     request = {
         'command' : 'metadata_leak',
         'm0' : m0,
