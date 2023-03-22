@@ -21,22 +21,22 @@ def solve():
     The fundamental request is the register one. We aim to register a user as an admin.
     In orther to do so I exploited the fact that the server has a certain syntax for storing the token so that,
     when decryptying it will be parsed as desired.
-    The principal part were:
-        - all the different fields should be a block long
+    The principal part was::
         - we should be able to inject the role=admin field in the username so that it is before 
             the one added by the server
     With this two conditions, we can be sure that role=admin is parsed berfore role=user and then we are registered as admin.
+    After we are registered as admins we can login and change the settings, and get our coffee!
     """
     request = {
         'command' : 'register',
-        'username' : '0000000username=000000000000&role=admin',
-        'favourite_coffee' : 'Cappuccino000000'
+        'username' : 'Filippo&role=admin',
+        'favourite_coffee' : 'Cappuccino'
     }
     json_send(request)
 
     response = json_recv()
 
-    token = response["token"][32:]
+    token = response["token"]
     
     request = {
         'command' : 'login',
