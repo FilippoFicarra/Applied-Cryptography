@@ -31,19 +31,22 @@ def solve():
         json_send(request)
 
         response = json_recv()
-        cipher = response["res"]
+        ciphertext = response["res"]
 
         dic_enc = {}
         dic_dec = {}
-
+        """
+        The solution is to exploit the fact that, with 2 bytes can have 2^16 different keys. In the server there is a double 
+        encryption if we are in the real world, each with a key of 2 bytes. My approach  was to send a know plaintext(0^16), and asking for the 
+        encryption. After that I looped trhough all the possible different keys and saving all the encryptiona of the plaintext with the key
+        and the decryption of the ciphertext with the same key. If at the end there are 2 keys that lead to enc(k1, ptx) = dec(k2, ctxt),
+        we are in the real world, otherwise we are in the random world.
+        """
         for k in range(2**16):
-            lkey = SHA256.new(k.to_bytes(2,"big")).digest()
-            lcipher = AES.new(lkey, AES.MODE_ECB)
-            dic_enc[k] = lcipher.encrypt(int.to_bytes(0,16, "big"))
-        for k in range(2**16):
-            rkey = SHA256.new(k.to_bytes(2,"big")).digest()
-            rcipher = AES.new(rkey, AES.MODE_ECB)
-            dic_dec[k] = rcipher.decrypt(bytes.fromhex(cipher))
+            key = SHA256.new(k.to_bytes(2,"big")).digest()
+            cipher = AES.new(key, AES.MODE_ECB)
+            dic_enc[k] = cipher.encrypt(int.to_bytes(0,16, "big"))
+            dic_dec[k] = cipher.decrypt(bytes.fromhex(ciphertext))
         
         s = set(dic_enc.values()).intersection(set(dic_dec.values()))
      
