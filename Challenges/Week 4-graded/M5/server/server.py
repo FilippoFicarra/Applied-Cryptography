@@ -71,12 +71,10 @@ class Message:
         protocol_maj_version = int.from_bytes(metadata[12:14], "little")
         protocol_min_version = metadata[14]
 
-        print(stream)
-
         # Represents the amount of blocks of additional metadata that we have to parse
         additional_metadata_len = metadata[15]
         remaining_stream = stream[32:]
-
+        print("Len:",additional_metadata_len)
         if additional_metadata_len * 16 > len(remaining_stream):
             raise ParsingException("Not enough blocks for parsing additional metadata")
 
@@ -101,6 +99,7 @@ class Message:
         sender = self.sender.to_bytes(4, "little")
         receiver = self.receiver.to_bytes(4, "little")
         timestamp = int(self.timestamp.timestamp()).to_bytes(4, "little")
+        print(timestamp)
         proto_maj_version = self.proto_maj_version.to_bytes(2, "little")
         proto_min_version = self.proto_min_version.to_bytes(1, "little")
 
@@ -112,6 +111,7 @@ class Message:
         content = pad(self.content, 16)
 
         additional_metadata_len = (len(additional_metadata) // 16).to_bytes(1, "little")
+        print("Metadata_len:",additional_metadata_len)
 
         b = (
             proto_header
@@ -124,6 +124,7 @@ class Message:
             + additional_metadata
             + content
         )
+        # print(b)
         return b
 
     def __repr__(self):
@@ -164,6 +165,7 @@ class MontoneServer(CommandServer):
 
         m0 = secrets.token_bytes(bs)
         c0 = secrets.token_bytes(bs)
+
 
         msg_blocks = [msg[i : i + bs] for i in range(0, len(msg), bs)]
 
@@ -208,6 +210,7 @@ class MontoneServer(CommandServer):
     @on_command("init") # type: ignore
     def handle_init(self, msg):
         message_metadata = self.secret_msg.encode() # NOTE: one block long
+        # print(f"Sending message with metadata: {message_metadata}")
         content = f"Thank you for using Montone messaging services".encode()
 
         # Get current (UTC-aware) datetime object and remove microseconds so that the
@@ -240,8 +243,12 @@ class MontoneServer(CommandServer):
             ctxt = bytes.fromhex(msg["ctxt"])
 
             ptxt = self.decrypt(m0, c0, ctxt)
-
+            if self.leaks == 1:
+                print(b"Plaintext: " + ptxt)
             msg = Message.from_bytes(ptxt)
+            if self.leaks == 1:
+                print("\n")
+                print(msg)
 
             self.send_message({"metadata": str(msg)})
         except (KeyError, ValueError, TypeError) as e:
