@@ -21,40 +21,59 @@ def json_send(req):
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
+"""
+    ptxt = (
+        b"filename="
+        + file_name
+        + b"&data="
+        + data
+        + b"&secret_byte="
+        + self.secret_byte
+    )
+    this is the plaintext that will be encrypted(decrypted) by the server
+"""
 
+def find_dk(m : str):
+    """
+    Here the use of the block of 00 is not to have influence when xoring with the decryption
+    of the subsequent block, so that we can easily get the decryption to use later.
+    """
+    request = {
+        'command' : 'encrypt',
+        'file_name' : 'flg.txt', # this is one block
+        "data" : "00"*10 + "00"*16 + m # this is 1 block (data00...00) +  1 block of 0's + 1 block of m
+    }
+    json_send(request)
+
+    response = json_recv()
+
+
+    blocks = blockify(bytes.fromhex(response["ctxt"]))
+
+    return blocks[3]
 
 def solve():
 
-    for i in range(10):
-        request = {
-            'command' : 'encrypt',
-            'file_name' : 'flg.txt',
-            "data" : "00"*10 + "00"*16 + (int.to_bytes(16, 1, "big")*16).hex()
-        }
-        json_send(request)
+    for _ in range(10):
 
-        response = json_recv()
-
-        blocks = blockify(bytes.fromhex(response["ctxt"]))
-
-        D_K_pad = blocks[3]
+        D_K_pad = find_dk((int.to_bytes(16, 1, "big")*16).hex()) # we first find the decryption of a full padded block
 
         request = {
             'command' : 'encrypt',
             'file_name' : 'flg',
             "data" : ''
-        }
+        } # this will return the encrytion(decryption) of 1 block(filename..+ data) and the encryption of the secret byte
         json_send(request)
 
         response = json_recv()
 
         blocks_2 = blockify(bytes.fromhex(response["ctxt"]))
 
-        c_2 = blocks_2[2]
+        c_2 = blocks_2[2] # this is the block corresponding to the xor of secret byte and decryption of full padded block
 
-        p_1 = byte_xor(c_2, D_K_pad)
+        p_1 = byte_xor(c_2, D_K_pad) # xoring back again we get the scecret byte block (in this case is "a=&secret_byte=?", where ? is the unknown byte)
 
-        guess = p_1[-1].to_bytes(1, "big").hex()
+        guess = p_1[-1].to_bytes(1, "big").hex() # this take the last byte
 
         request = {
             'command' : 'solve',
