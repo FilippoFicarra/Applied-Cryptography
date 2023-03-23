@@ -3,7 +3,6 @@ import re
 import telnetlib
 import json
 from string import printable
-import time
 from Crypto.Util.Padding import pad, unpad
 
 def blockify(a):
