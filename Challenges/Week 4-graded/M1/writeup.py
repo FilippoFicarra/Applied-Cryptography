@@ -29,7 +29,7 @@ def solve():
     """
     request = {
         'command' : 'register',
-        'username' : 'Filippo&role=admin',
+        'username' : 'Filippo&role=admin', # here we inject the role=admin field
         'favourite_coffee' : 'Cappuccino'
     }
     json_send(request)
