@@ -3,7 +3,6 @@ import re
 import telnetlib
 import json
 from string import ascii_letters, digits
-import time
 
 ALPHABET = ascii_letters + digits
 
