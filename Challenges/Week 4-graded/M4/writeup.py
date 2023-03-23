@@ -80,7 +80,7 @@ def solve():
         encrypted_flag_response.append(byte_xor(resp_blocks[-i], D_K).decode())
 
     # I just revers the order of the array since we went backward in retrieving, and split to get the flag field
-    decryption = "".join(encrypted_flag_response[::-1]).split("=")[1] 
+    decryption = "".join(encrypted_flag_response[::-1])
     return decryption
 
 
