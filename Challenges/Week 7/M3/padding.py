@@ -19,7 +19,7 @@ class CBC_HMAC():
 
     def _add_pt_padding(self, pt: bytes):
         """Return padded plaintext"""
-        plen = self.block_len - len(pt)
+        plen = len(pt)%self.block_len
         if plen == 0:
             plen = self.block_len
         return pt + bytes([plen]) * plen
