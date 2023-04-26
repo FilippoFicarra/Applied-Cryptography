@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import secrets
-from Crypto.Hash import SHA256, HMAC
+from Crypto.Hash import SHA384, HMAC
 from Crypto.Cipher import AES 
 
 
@@ -53,40 +53,41 @@ class CBC_HMAC():
 
         # Compute ciphertext.
         ct = self.cipher.encrypt(self._add_pt_padding(pt))
-        tag = HMAC.new(key = self.mac_key, msg = add_data + (iv + ct) + bytes.fromhex(self.eight_byte_encoding(add_data)), digestmod=SHA256).digest()[:self.tag_len]
+        tag = HMAC.new(key = self.mac_key, msg = add_data + (iv + ct) + bytes.fromhex(self.eight_byte_encoding(add_data)), digestmod=SHA384).digest()[:self.tag_len]
 
         return (iv + ct) + tag
+    
+    def decrypt(self, ct: bytes, add_data: bytes = b''):
+        """Verify MAC tag and return plaintext.
+        """
+
+        print(ct.hex())
+        iv = ct[:self.block_len]
+        ct = ct[self.block_len:]
+        tag = ct[-self.tag_len:]
+        ct = ct[:-self.tag_len]
+        print(iv.hex())
+        print(ct.hex())
+        print(tag.hex())
+        if not HMAC.new(key = self.mac_key, msg = add_data + (iv + ct) + bytes.fromhex(self.eight_byte_encoding(add_data)), digestmod=SHA384).digest()[:self.tag_len] == tag:
+            raise ValueError("Bad decryption")
+        self.cipher = AES.new(self.enc_key, AES.MODE_CBC, iv)
+        pt = self.cipher.decrypt(ct)
+        return pt
 
 def main():
     test_key = bytes.fromhex("""
-        000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+        41206c6f6e6720726561642061626f75742073797374656d64206973207768617420796f75206e65656420616674657220746865206c6162
         """)
-    test_pt = bytes.fromhex("""
-        41206369706865722073797374656d206d757374206e6f742062652072657175
-        6972656420746f206265207365637265742c20616e64206974206d7573742062
-        652061626c6520746f2066616c6c20696e746f207468652068616e6473206f66
-        2074686520656e656d7920776974686f757420696e636f6e76656e69656e6365
+    test_ct = bytes.fromhex("""
+        bb74c7b9634a382df5a22e0b744c6fda63583e0bf0e375a8a5ed1a332b9e0f78
+        aab42a19af61745e4d30c3d04eeee23a7c17fc97d442738ef5fa69ea438b21e1
+        b07fb71b37b52385d0e577c3b0c2da29fb7ae10060aa1f4b486f1d8e27cca8ab
+        7df30af4ad0db52e
         """)
-    test_iv = bytes.fromhex("1af38c2dc2b96ffdd86694092341bc04")
-    test_ad = bytes.fromhex("""
-        546865207365636f6e64207072696e6369706c65206f66204175677573746520
-        4b6572636b686f666673
-        """)
-    test_c = bytes.fromhex("""
-        1af38c2dc2b96ffdd86694092341bc04c80edfa32ddf39d5ef00c0b468834279
-        a2e46a1b8049f792f76bfe54b903a9c9a94ac9b47ad2655c5f10f9aef71427e2
-        fc6f9b3f399a221489f16362c703233609d45ac69864e3321cf82935ac4096c8
-        6e133314c54019e8ca7980dfa4b9cf1b384c486f3a54c51078158ee5d79de59f
-        bd34d848b3d69550a67646344427ade54b8851ffb598f7f80074b9473c82e2db
-        652c3fa36b0a7c5b3219fab3a30bc1c4
-        """)
+    test_ad = bytes.fromhex("")
+    print(CBC_HMAC(32, 24, test_key).decrypt(test_ct, test_ad))
 
-    assert CBC_HMAC(16, 16, test_key).encrypt(test_pt, test_ad, test_iv) == test_c
-
-    pt = b"Just plaintext\x02\x00"
-    print(SHA256.new(
-        data=CBC_HMAC(16, 16, test_key).encrypt(pt, iv=test_iv)
-        ).hexdigest())
 
 if __name__ == "__main__":
     main()

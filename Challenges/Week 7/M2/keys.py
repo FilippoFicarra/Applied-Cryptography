@@ -14,7 +14,7 @@ class CBC_HMAC():
 
         self.enc_key_len = enc_key_len
         self.mac_key_len = mac_key_len
-        self.tag_len = 256
+        self.tag_len = mac_key_len
 
         # a correctly sized key must always be provided by the caller
         if not len(key) == self.mac_key_len + self.enc_key_len:

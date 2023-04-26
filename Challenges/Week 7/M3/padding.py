@@ -7,7 +7,7 @@ class CBC_HMAC():
     def __init__(self, enc_key_len: int = 16, mac_key_len: int = 16, key: bytes = None):
         self.enc_key_len = enc_key_len
         self.mac_key_len = mac_key_len
-        self.tag_len = 256
+        self.tag_len = mac_key_len
 
         if not len(key) == self.mac_key_len + self.enc_key_len:
             raise ValueError("Bad key len")
