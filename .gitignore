@@ -3,3 +3,8 @@ __pycache__
 *.DS_Store
 Challenges/Week 5/M2/rockyou.txt
 Challenges/Week 5/M3/rockyou.txt
+.DS_Store
+.DS_Store
+.gitignore
+Challenges/.DS_Store
+.gitignore
