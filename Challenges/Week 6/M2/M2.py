@@ -1,5 +1,24 @@
 #!/usr/bin/env python3
 
+import telnetlib
+import json
+
+
+tn = telnetlib.Telnet("aclabs.ethz.ch", 50602)
+
+
+def readline():
+    return tn.read_until(b"\n")
+
+def json_recv():
+    line = readline()
+    return json.loads(line.decode())
+
+def json_send(req):
+    request = json.dumps(req).encode()
+    tn.write(request + b"\n")
+
+
 def blockify(data: bytes, blocksize: int):
     assert(len(data) % blocksize == 0)
     return [int.from_bytes(data[i:i+blocksize], 'big') for i in range(0, len(data), blocksize)]
@@ -132,12 +151,39 @@ class SHAzam:
         
         return b''.join([word.to_bytes(WORD_SIZE_BYTES, 'big') for word in self.hash])
 
+
 if __name__ == "__main__":
+
+    request = {
+        "command": "get_token",
+    }
+    json_send(request)
+    response = json_recv()
+    authenticated_command = response["authenticated_command"]
+    mac = response["mac"]
+
+    # length extension attack
+    COMMAND_STRING = b'command=hello&arg=world'
+    EXTRA_COMMAND = b'&command=flag'
     sha = SHAzam()
-    # Add assert for compression function
-    sha.update(b'DC is better than Marvel anyway!')
-    assert(sha.digest().hex() == '3cd46b5888ee08dc695cd77003e1ebe4cd4d552f')
+    full_msg = sha.pad(b'X'*16 + COMMAND_STRING)
+    new_command = full_msg[16:] + EXTRA_COMMAND
 
     sha = SHAzam()
-    sha.update(b"I'm sorry Stan Lee, I actually love you please don't hurt me")
-    print(f'Your flag is: {sha.digest().hex()}')
+    for i in range(0, 40, 8):
+        sha.hash[i//8] = int(mac[i:i+8], 16)
+
+    sha.length = 64
+
+    sha.update(EXTRA_COMMAND)
+    digest = sha.digest().hex()
+
+    request = {
+        "command": "authenticated_command",
+        "authenticated_command": new_command.hex(),
+        "mac": digest
+    }
+
+    json_send(request)
+    res = json_recv()
+    print(res)
