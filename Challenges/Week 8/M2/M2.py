@@ -19,7 +19,6 @@ def json_send(req):
     tn.write(request + b"\n")
 
 def cubic_root_int(a, x_0 = 1, tol=1e-10) -> int:
-
     x_n = x_0
     while True:
         x_n1 = (2*x_n + a//(x_n*x_n))//3
