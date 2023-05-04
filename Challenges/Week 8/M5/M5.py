@@ -5,7 +5,7 @@ import telnetlib
 import json
 
 
-server = "localhost"#"aclabs.ethz.ch"
+server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 50805)
 
 def readline():
@@ -21,11 +21,18 @@ def json_send(req):
 
 
 def extended_euclidean_algorithm(a, b):
-    if b == 0:
-        return (a, 1, 0)
-    else:
-        gcd, x, y = extended_euclidean_algorithm(b, a % b)
-        return (gcd, y, x - (a // b) * y)
+    # Base Case
+    if a == 0 :
+        return b,0,1
+             
+    gcd,x1,y1 = extended_euclidean_algorithm(b%a, a)
+     
+    # Update x and y using results of recursive
+    # call
+    x = y1 - (b//a) * x1
+    y = x1
+     
+    return gcd,x,y
 
 def chinese_remainder(moduli , rem) : 
       
@@ -53,15 +60,13 @@ def solve():
     json_send(request)
 
     response = json_recv()
-    print(response)
 
     N = int(response['N'], 16)
 
+    count = 0
     es = []
     ctxts = []
-    count = 0
     while True:
-
         e = number.getPrime(10)
 
         request = {
@@ -72,24 +77,20 @@ def solve():
         response = json_recv()
 
         if 'ciphertext' in response :
-            if e not in es:
-                count += 1
-                es.append(e)
-                ctxts.append(int(response['ciphertext'], 16))
-                if count > 1:
-                    break
+            ctxt = int(response['ciphertext'], 16)
+            
+            es.append(e)
+            ctxts.append(ctxt)
+            count += 1 
+            if count == 2:
+                break
 
-    # print(es)
-    # print(ctxts)
-    print(math.gcd(es[0], N))
+    
     gcd, x, y = extended_euclidean_algorithm(es[0], es[1])
-
-    # print(gcd)
-    # print(x)
-    # print(y)
+    m = pow(ctxts[0], x, N) * pow(ctxts[1], y, N) % N
 
 
-    return  True
+    return  m.to_bytes(128, 'big').decode()
 
 
 
