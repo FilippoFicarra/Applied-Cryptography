@@ -31,10 +31,8 @@ class SecureRSAServer(CommandServer):
         """Generates an RSA key. Repeatedly picks p and q, until they are coprime to E"""
         while True:
             t = datetime.datetime.now().second
-            print(t)
             r = random.randint(1, 10)
             p = number.getPrime(1024, randfunc=self.make_random_stream(t))
-            print(p)
             q = number.getPrime(1024, randfunc=self.make_random_stream(t+r))
             if (p-1) % E == 0 or (q-1) % E == 0:
                 continue
