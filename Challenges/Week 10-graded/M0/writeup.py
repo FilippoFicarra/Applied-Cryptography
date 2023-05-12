@@ -21,18 +21,6 @@ def json_send(req):
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
-def DSA_verify(r: int, s: int, msg: bytes, vfy_key: int, g: int, p: int, q: int) -> bool:
-    if not (1 <= r <= q-1 and 1 <= s <= q-1):
-        print("compà")
-        return False
-
-    w = pow(s, -1, q)
-    h = int.from_bytes(SHA256.new(msg).digest(), "big")
-    u1 = w * h % q
-    u2 = w * r % q
-
-    return (pow(g, u1, p) * pow(vfy_key, u2, p) % p) % q == r
-
 def DSA_sign(msg: bytes, sign_key: int, g: int, p: int, q: int, k: int, r: int):
     # Get k and r = (g^k mod p) mod q
 
