@@ -95,35 +95,5 @@ def solve():
     print(flag)
 
 
-    # message = "A" * (len(ctxt_f)//2)
-    # request = {
-    #     "command": "encrypt",
-    #     "ptxt": message
-    # }
-    # json_send(request)
-    # response = json_recv()
-
-    # ctxt = response["enc_flag"]
-    # nonce = response["nonce"]
-    # mac_tag = response["mac_tag"]
-
-    # r = byte_xor(message.encode(), bytes.fromhex(ctxt))
-    # for i in range(2**12):
-    #     request = {
-    #         "command": "decrypt",
-    #         "ctxt": i.to_bytes(len(ctxt)//2, "big").hex(),# find the right ciphertext with associated nonce to encrypt in the ptxt associated to the mac, then retrieve through r
-    #         "nonce": nonce,
-    #         "mac_tag": mac_tag
-    #     }
-    #     json_send(request)
-    #     response = json_recv()
-
-
-    #     if response["success"] == True:
-    #         print("success")
-    #         ptxt = byte_xor(i.to_bytes(len(ctxt)//2, "big"), r).decode()
-    #         return ptxt
-
-
 if __name__ == "__main__":
     print(solve())
