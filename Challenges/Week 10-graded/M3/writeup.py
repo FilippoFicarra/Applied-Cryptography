@@ -1,13 +1,8 @@
-import math
-import random
 import telnetlib
 import json
-from Crypto.Cipher import AES
-from Crypto.Protocol.KDF import HKDF
-
 
 server = "aclabs.ethz.ch"
-tn = telnetlib.Telnet(server, 51002)
+tn = telnetlib.Telnet(server, 51003)
 from Crypto.Hash import MD5, HMAC, SHA256
 from Crypto.Util import number
 
@@ -27,67 +22,63 @@ def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
-
-def find_exponent(g, h, p, q=20):
-    """
-    Find the exponent x such that g^x = h (mod p).
-    """
-    for x in range(q):
-        if pow(g, x, p) == h:
-            return x
-    return None
-
-
-
 def solve():
-    q = 1001
-    while True:
-        if q < 1000: 
-            if (p-1)%q == 0:
-                g = pow(h, (p-1)//q, p) #find a g such that we have small subgroup and we can bruteforce to solve the discrete log
-                if g != 1 and g != 0 and g != p-1:
+
+    for _ in range(256):
+        request = {
+            "command": "get_challenge",
+        }
+        json_send(request)
+        response = json_recv()
+        challenge = bytes.fromhex(response["challenge"])
+
+        # print(challenge.hex())
+
+        request = {
+            "command": "get_params",
+        }
+        json_send(request)
+        response = json_recv()
+        N = int(response["N"])
+        e = int(response["e"])
+
+        counter = 0
+        while True:
+            counter += 1
+            c = (int.from_bytes(challenge, "big") * pow(2**counter, e, N)) % N
+            request = {
+                "command": "decrypt",
+                "ctxt": c.to_bytes(512, "big").hex()
+            }
+            json_send(request)
+            response = json_recv()
+            # print(response)
+            try:
+                if "Error: Decryption failed" in response["error"] :
                     break
-            q = q + 1
-        else:
-            q = 2
-            p = number.getPrime(1024)
-            h = number.getRandomRange(1, p-1)
+            except:
+                continue
 
+        i = N.bit_length()  - 8 - (counter - 1)
+
+        # print(i)
+
+        request = {
+            "command": "solve",
+            "i": i
+        }
+        json_send(request)
+        response = json_recv()
+        # print(response["res"])
+        
     request = {
-        "command": "set_params",
-        "p": p,
-        "g": g
+        "command": "flag",
     }
     json_send(request)
     response = json_recv()
+    flag = response["flag"]
 
-    bob_pubkey = response["bob_pubkey"]
-
-
-    request = {
-        "command": "encrypt",
-    }
-    json_send(request)
-    response = json_recv()
-
-    pk = response["pk"]
-    ciphertext = response["ciphertext"]
-    tag = response["tag"]
-    nonce = response["nonce"]
-
-    sk = find_exponent(g, pk, p, q)
-
-
-    shared = pow(bob_pubkey, sk, p)
-    shared_bytes = shared.to_bytes(512, "big")
-    pk_bytes = pk.to_bytes(512, "big")
-    bob_pubkey_bytes = bob_pubkey.to_bytes(512, "big")
-
-    K: bytes = HKDF(shared_bytes + pk_bytes + bob_pubkey_bytes, 32, salt=b"", num_keys=1, context=b"dhies-enc", hashmod=SHA256) #type: ignore
-    cipher = AES.new(K, AES.MODE_GCM, nonce=bytes.fromhex(nonce))
-    flag = cipher.decrypt_and_verify(bytes.fromhex(ciphertext), bytes.fromhex(tag))
-
-    return flag.decode()
+    return flag
 
 
 if __name__ == "__main__":

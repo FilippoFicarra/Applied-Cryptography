@@ -33,7 +33,7 @@ def RSA_pad_encrypt(e: int, N: int, ptxt: bytes) -> Tuple[bytes, int]:
 
 def RSA_decrypt_unpad(d: int, N: int, ctxt: bytes) -> bytes:
     m = pow(int.from_bytes(ctxt, "big"), d, N).to_bytes(RSA_KEYLEN // 8, 'big')
-
+    print(N.bit_length())
     if m[0] != 0:
         raise ValueError("Error: Decryption failed")
 
@@ -75,6 +75,7 @@ class SuboptimalRSAServer(CommandServer):
     def handle_solve(self, msg):
         try:
             i = int(msg["i"])
+            print(self.length)
             if i == self.length:
                 self.score += 1
                 self.initialize_new_round()
