@@ -48,7 +48,7 @@ def solve():
             c = (int.from_bytes(challenge, "big") * pow(2**counter, e, N)) % N
             request = {
                 "command": "decrypt",
-                "ctxt": c.to_bytes(512, "big").hex()
+                "ctxt": c.to_bytes(N.bit_length()//8, "big").hex()
             }
             json_send(request)
             response = json_recv()
@@ -59,7 +59,7 @@ def solve():
             except:
                 continue
 
-        i = N.bit_length()  - 8 - (counter - 1)
+        i = N.bit_length() - 8 - (counter - 1)
 
         # print(i)
 
