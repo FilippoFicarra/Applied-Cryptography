@@ -7,7 +7,6 @@ from Crypto.Hash import SHAKE256
 RSA_KEYLEN = 1024 # 1024-bit modulus
 RAND_LEN = 256 # 256-bit of randomness for masking
 P_LEN = (RSA_KEYLEN - RAND_LEN - 8) // 8
-M_OLD = 0
 
 
 def xor(a: bytes, b: bytes) -> bytes:
@@ -29,13 +28,16 @@ def RSA_pad_encrypt(e: int, N: int, ptxt: bytes) -> bytes:
     ptxt_masked = xor(rand_hashed, ptxt_padded)
     m = int.from_bytes(b'\x00' + rand + ptxt_masked, "big")
     # print("m", m)
+    global M_OLD
     M_OLD = m
-    print("m=", M_OLD)
     return pow(m, e, N).to_bytes(RSA_KEYLEN // 8, 'big')
 
 def RSA_decrypt_unpad(d: int, N: int, ctxt: bytes) -> bytes:
     m = pow(int.from_bytes(ctxt, "big"), d, N).to_bytes(RSA_KEYLEN // 8, 'big')
-    
+    # print("m=", m.hex())
+    # print("m_old=", M_OLD)
+    # print("m_old=", M_OLD.to_bytes(RSA_KEYLEN // 8, 'big').hex())
+
     if m[0] != 0:
         raise ValueError("Error: Decryption failed")
     rand = m[1:1+RAND_LEN//8]

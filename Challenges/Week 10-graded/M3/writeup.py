@@ -21,6 +21,7 @@ def json_send(req):
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
+RSA_KEYLEN = 1024
 
 def solve():
 
@@ -48,7 +49,7 @@ def solve():
             c = (int.from_bytes(challenge, "big") * pow(2**counter, e, N)) % N
             request = {
                 "command": "decrypt",
-                "ctxt": c.to_bytes(N.bit_length()//8, "big").hex()
+                "ctxt": c.to_bytes(RSA_KEYLEN//8, "big").hex()
             }
             json_send(request)
             response = json_recv()
