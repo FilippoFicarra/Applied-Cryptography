@@ -36,6 +36,7 @@ def solve():
     c_1 = bytes.fromhex(response["ciphertext"])
     t_1 = bytes.fromhex(response["tag"])
 
+    # note: the nonce is fixed, so the mask is fixed
     request = {
         "command": "encrypt",
         "message": "Give me a fleg!",
@@ -53,15 +54,23 @@ def solve():
     c_2_int = int.from_bytes(c_2, "big")
 
     # k_squared is given because mask is fixed for a fixed nonce
+    # t_1_int = (h_1 + mask_int) % p
+    # h_1 = (k**3  + c_1_int * k**2 + 15 * k) % p
+    # t_1_int = (k**3  + c_1_int * k**2 + 15 * k + mask_int) % p
+    # t_2_int = (k**3  + c_2_int * k**2 + 15 * k + mask_int) % p
+
+    # we subtract the two equations to get
     k_squared = ((t_1_int - t_2_int)  * pow(c_1_int-c_2_int, -1, p)) % p
     
-    # h = (k**3  + c_1_int * k**2 + 15 * k) % p
-    # mask_int = (t_1_int - h) % p
+    # mask_int = (t_1_int - h_1) % p
+    # we can use ctr mode to forge a ciphertext, since we know the plaintext and we know that the cipher block outputs the same value (we choose the same nonce)
     c_forge = byte_xor(byte_xor(c_1, b"Give me a flat!"),b'Give me a flag!')
     c_forge_int = int.from_bytes(c_forge, "big")
 
     # h_forge = (k**3  + int.from_bytes(c_forge, "big") * k**2 + 15 * k) % p
     # t_forge = (h_forge + mask_int) % p
+    # t_forge = (h_forge + (t_1_int - h_1)) % p
+    # t_forge = ((k**3  + c_forge_int * k**2 + 15 * k) % p + t_1_int - ((k**3  + c_1_int * k**2 + 15 * k) % p)) % p
     t_forge = (t_1_int + (c_forge_int-c_1_int)* k_squared) % p
 
     request = {
