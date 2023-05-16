@@ -82,5 +82,7 @@ class SuboptimalRSAServer(CommandServer):
 
 
 if __name__ == "__main__":
-    flag = "flag{test_flag}"
+    
+    flag = "flag{test"+secrets.token_bytes(42).hex()+"}"
+    print(len(flag))
     SuboptimalRSAServer.start_server("0.0.0.0", 51004, flag=flag)

@@ -1,7 +1,7 @@
-import math
 import telnetlib
 import json
 from Crypto.Hash import SHAKE256
+
 server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 51004)
 
@@ -24,7 +24,6 @@ def json_send(req):
 def xor(a: bytes, b: bytes) -> bytes:
     assert len(a) == len(b), f"{len(a)}, {len(b)}"
     return bytes(x ^ y for x, y in zip(a, b))
-
 
 def ceil(a: int, b: int) -> int:
     # Necessary because of floating point precision loss
@@ -65,26 +64,20 @@ def find_alpha_0(alpha_0: int, N: int, e: int, enc_flag: bytes):
         }
         json_send(request)
         response = json_recv()
-        # print(response)
         alpha_0 += 1
         try:
-            if "Eror: Decryption failed" in response["error"] :
-                alpha_0 -= 1
-                return alpha_0
+            if "Eror: Decryption failed" in response["error"] : # we found the first alpha_0 that incurs a modular reduction
+                return alpha_0 - 1
         except:
             continue
 
-
 def decode_msg(m : int):
-    # print("start decoding")
     m_bytes=m.to_bytes(RSA_KEYLEN // 8, 'big')
-    # print("m_bytes = ", m_bytes.hex())
     rand = m_bytes[1:1+RAND_LEN//8]
     ptxt_masked = m_bytes[1+RAND_LEN//8:]
 
     rand_hashed = SHAKE256.new(rand).read(P_LEN)
     ptxt_padded = xor(ptxt_masked, rand_hashed)
-    # print(ptxt_padded)
 
     for i, b in enumerate(ptxt_padded):
         if b == 1 and all(ch == 0 for ch in ptxt_padded[:i]):
@@ -93,6 +86,7 @@ def decode_msg(m : int):
             except:
                 return ""
     return ""
+
 def solve():
 
     request = {
@@ -114,93 +108,65 @@ def solve():
     # step 1
     i, counter = find_len(enc_flag, N, e)
 
-
     m_max = 2**i
     m_min = 2**(i-1)
-    B = 2**(N.bit_length()-8)
-
+    B = 2**(RSA_KEYLEN-8)
 
     # step 2
     # find α0 such that α0 · m incurs a modular reduction, but (α0 − 1)m does not.
     # modular reduction happen if the error message is not the one of m[0] != 0
-
     alpha_0 = 2**(counter) # we already know that the error "Error: Decryption failed" appears from here on, until we have a modular reduction
     alpha_0 = find_alpha_0(alpha_0, N, e, enc_flag)
-    
-    # print("alpha_0 = ", alpha_0)
-    # print("N = ", N)
+
 
     # (alpha_0 - 1) * m < N <= alpha_0 * m
     m_min = ceil(N, alpha_0)
-    m_max = ceil(N, (alpha_0 - 1))
+    m_max = ceil(N , (alpha_0 - 1))
 
     
     alpha, r = get_multiplier(m_max, m_min, N, B)
-    # print("alpha =", alpha)
 
-    m_min_new = alpha * m_min
-    m_max_new = alpha * m_max
-    
 
     # step 3
+    # use this if our binary search gets stuck
+    prev_m_min = m_min
+    prev_m_max = m_max
 
-    prev_m_min = m_min_new
-    prev_m_max = m_max_new
+    while m_min != m_max - 1 :
 
-    while m_min_new != m_max_new - 1:
-
+        # we send c * alpha^e mod N, so alpha*m mod N is the message we want to decrypt
         request = {
             "command": "decrypt",
             "ctxt": ((int.from_bytes(enc_flag, "big") * pow(alpha, e, N)) % N).to_bytes(N.bit_length()//8, "big").hex()
         }
         json_send(request)
         response = dict(json_recv())
-        if "error" in response.keys() and "Error: Decryption failed" in response["error"]:
-            m_min_new = (B + r * N)
+        if "error" in response.keys() and "Error: Decryption failed" in response["error"]: # alpha * m mod N overflows the first byte
+            m_min = ceil((B + r * N),alpha) # message is in the upper half 
         else:
-            m_max_new = (B + r * N) 
+            m_max = ceil((B + r * N),alpha) # message is in the lower half, because alpha * m mod N does not overflow the first byte
         
-        m_max_new = m_max_new // alpha
-        m_min_new = m_min_new // alpha
-        alpha, r = get_multiplier(m_max_new, m_min_new, N, B)
 
-        m_min_new = alpha * m_min_new
-        m_max_new = alpha * m_max_new
+        # get new multiplier
+        alpha, r = get_multiplier(m_max, m_min, N, B)
 
-        if prev_m_max == m_max_new and prev_m_min == m_min_new:
+        if prev_m_max == m_max and prev_m_min == m_min: # we are stuck
             break
-        prev_m_max = m_max_new
-        prev_m_min = m_min_new
+        prev_m_max = m_max
+        prev_m_min = m_min
 
-    m_min_new = m_min_new // alpha
-    m_max_new = m_max_new // alpha
 
-    # print("m_min_new =", m_min_new)
-    # print("m_max_new =", m_max_new)
+   
+    # we have a range of messages, (theoretically m_min is the only one that is correct, but we can't be sure)
+    run = 0
+    while m_min+run <= m_max:
+        print(decode_msg(m_min+run))
+        run += 1
 
-    
-    if m_min_new >= m_max_new:
-        print(decode_msg(m_min_new))
-
-    counter = 0
-    while m_min_new+int(counter) <= m_max_new:
-        print(decode_msg(m_min_new+int(counter)))
-        counter += 1
-    
-
-        
-    # step 4
-    # m = m_min_new // alpha
-    # print("m =", m.to_bytes(N.bit_length()//8, "big"))
-
-    flag = ""
-
-    return flag
-
+   
 
 if __name__ == "__main__":
-    flag = solve()
-    print(flag)
+    solve()
     
 
 
