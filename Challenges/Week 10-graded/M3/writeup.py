@@ -59,7 +59,7 @@ def solve():
             except:
                 continue
 
-        i = N.bit_length() - 8 - (counter - 1) # so the message can be represented by total_bit_len - 8 - (counter - 1) bits, since we shifted by 2**counter
+        i = RSA_KEYLEN - 8 - (counter - 1) # so the message can be represented by total_bit_len - 8 - (counter - 1) bits, since we shifted by 2**counter
 
 
         request = {

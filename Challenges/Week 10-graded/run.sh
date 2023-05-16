@@ -78,8 +78,9 @@ do
     start=$(date +%s.%N)
 
     # Run your Python program
-    python3.10 "$1" > tmp.txt 
-    if cat tmp.txt | grep "flag{$3.*}"; then
+    output=$(python3.10 "$1")
+    # echo "$output"
+    if echo "$output" | grep "flag{$3.*}"; then
         echo "Correct!"
     else
         echo "Not correct!!"

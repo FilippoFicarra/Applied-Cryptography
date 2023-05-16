@@ -1,0 +1,1 @@
+flag{finding_a_root_is_as_easy_as_doing_cd_/6e7993436eff458a65895f630bd38064}
