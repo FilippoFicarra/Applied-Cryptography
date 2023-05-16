@@ -3,8 +3,8 @@ import json
 
 server = "aclabs.ethz.ch"
 tn = telnetlib.Telnet(server, 51003)
-from Crypto.Hash import MD5, HMAC, SHA256
-from Crypto.Util import number
+
+RSA_KEYLEN = 1024
 
 
 def readline():
@@ -21,7 +21,6 @@ def json_send(req):
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
-RSA_KEYLEN = 1024
 
 def solve():
 
@@ -33,7 +32,6 @@ def solve():
         response = json_recv()
         challenge = bytes.fromhex(response["challenge"])
 
-        # print(challenge.hex())
 
         request = {
             "command": "get_params",
@@ -43,9 +41,11 @@ def solve():
         N = int(response["N"])
         e = int(response["e"])
 
+
         counter = 0
         while True:
             counter += 1
+            # we multiply c by (2**counter)**e, so m is shifted by 2**counter
             c = (int.from_bytes(challenge, "big") * pow(2**counter, e, N)) % N
             request = {
                 "command": "decrypt",
@@ -53,16 +53,14 @@ def solve():
             }
             json_send(request)
             response = json_recv()
-            # print(response)
             try:
-                if "Error: Decryption failed" in response["error"] :
+                if "Error: Decryption failed" in response["error"] : # if we get error the first byte is not 0 and we know how many shift we needed from the message to overflow
                     break
             except:
                 continue
 
-        i = N.bit_length() - 8 - (counter - 1)
+        i = N.bit_length() - 8 - (counter - 1) # so the message can be represented by total_bit_len - 8 - (counter - 1) bits, since we shifted by 2**counter
 
-        # print(i)
 
         request = {
             "command": "solve",
@@ -70,7 +68,6 @@ def solve():
         }
         json_send(request)
         response = json_recv()
-        # print(response["res"])
         
     request = {
         "command": "flag",
