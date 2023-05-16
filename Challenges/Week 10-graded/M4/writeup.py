@@ -90,79 +90,85 @@ def decode_msg(m : int):
 
 def solve():
 
-    request = {
-        "command": "flag",
-    }
-    json_send(request)
-    response = json_recv()
-    enc_flag = bytes.fromhex(response["flag"])
+    found = False
+    while not found:
 
-
-    request = {
-        "command": "get_params",
-    }
-    json_send(request)
-    response = json_recv()
-    N = int(response["N"])
-    e = int(response["e"])
-
-    # step 1
-    i, counter = find_len(enc_flag, N, e)
-
-    m_max = 2**i
-    m_min = 2**(i-1)
-    B = 2**(RSA_KEYLEN-8)
-
-    # step 2
-    # find α0 such that α0 · m incurs a modular reduction, but (α0 − 1)m does not.
-    # modular reduction happen if the error message is not the one of m[0] != 0
-    alpha_0 = 2**(counter) # we already know that the error "Error: Decryption failed" appears from here on, until we have a modular reduction
-    alpha_0 = find_alpha_0(alpha_0, N, e, enc_flag)
-
-
-    # (alpha_0 - 1) * m < N <= alpha_0 * m
-    m_min = ceil(N, alpha_0)
-    m_max = ceil(N , (alpha_0 - 1))
-
-    
-    alpha, r = get_multiplier(m_max, m_min, N, B)
-
-
-    # step 3
-    # use this if our binary search gets stuck
-    prev_m_min = m_min
-    prev_m_max = m_max
-
-    while m_min != m_max - 1 :
-
-        # we send c * alpha^e mod N, so alpha*m mod N is the message we want to decrypt
         request = {
-            "command": "decrypt",
-            "ctxt": ((int.from_bytes(enc_flag, "big") * pow(alpha, e, N)) % N).to_bytes(N.bit_length()//8, "big").hex()
+            "command": "flag",
         }
         json_send(request)
-        response = dict(json_recv())
-        if "error" in response.keys() and "Error: Decryption failed" in response["error"]: # alpha * m mod N overflows the first byte
-            m_min = ceil((B + r * N),alpha) # message is in the upper half 
-        else:
-            m_max = ceil((B + r * N),alpha) # message is in the lower half, because alpha * m mod N does not overflow the first byte
-        
+        response = json_recv()
+        enc_flag = bytes.fromhex(response["flag"])
 
-        # get new multiplier
+
+        request = {
+            "command": "get_params",
+        }
+        json_send(request)
+        response = json_recv()
+        N = int(response["N"])
+        e = int(response["e"])
+
+        # step 1
+        i, counter = find_len(enc_flag, N, e)
+
+        m_max = 2**i
+        m_min = 2**(i-1)
+        B = 2**(RSA_KEYLEN-8)
+
+        # step 2
+        # find α0 such that α0 · m incurs a modular reduction, but (α0 − 1)m does not.
+        # modular reduction happen if the error message is not the one of m[0] != 0
+        alpha_0 = 2**(counter) # we already know that the error "Error: Decryption failed" appears from here on, until we have a modular reduction
+        alpha_0 = find_alpha_0(alpha_0, N, e, enc_flag)
+
+
+        # (alpha_0 - 1) * m < N <= alpha_0 * m
+        m_min = ceil(N, alpha_0)
+        m_max = ceil(N , (alpha_0 - 1))
+
+        
         alpha, r = get_multiplier(m_max, m_min, N, B)
 
-        if prev_m_max == m_max and prev_m_min == m_min: # we are stuck
-            break
-        prev_m_max = m_max
+
+        # step 3
+        # use this if our binary search gets stuck
         prev_m_min = m_min
+        prev_m_max = m_max
+
+        while m_min != m_max - 1 :
+
+            # we send c * alpha^e mod N, so alpha*m mod N is the message we want to decrypt
+            request = {
+                "command": "decrypt",
+                "ctxt": ((int.from_bytes(enc_flag, "big") * pow(alpha, e, N)) % N).to_bytes(N.bit_length()//8, "big").hex()
+            }
+            json_send(request)
+            response = dict(json_recv())
+            if "error" in response.keys() and "Error: Decryption failed" in response["error"]: # alpha * m mod N overflows the first byte
+                m_min = ceil((B + r * N),alpha) # message is in the upper half 
+            else:
+                m_max = ceil((B + r * N),alpha) # message is in the lower half, because alpha * m mod N does not overflow the first byte
+            
+
+            # get new multiplier
+            alpha, r = get_multiplier(m_max, m_min, N, B)
+
+            if prev_m_max == m_max and prev_m_min == m_min: # we are stuck
+                break
+            prev_m_max = m_max
+            prev_m_min = m_min
 
 
-   
-    # we have a range of messages, (theoretically m_min is the only one that is correct, but we can't be sure)
-    run = 0
-    while m_min+run <= m_max:
-        print(decode_msg(m_min+run))
-        run += 1
+    
+        # we have a range of messages, (theoretically m_min is the only one that is correct, but we can't be sure)
+        run = 0
+        while m_min+run <= m_max:
+            message = decode_msg(m_min+run)
+            print(message)
+            if message.startswith("flag{") and message.endswith("}"):
+                found = True
+            run += 1
 
    
 
