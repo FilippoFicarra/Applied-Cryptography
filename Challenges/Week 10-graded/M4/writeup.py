@@ -35,6 +35,7 @@ def get_multiplier(m_max: int, m_min: int, N: int, B: int) -> int:
     alpha = ceil(r * N, m_min)
     return alpha, r
 
+# see M3
 def find_len(enc_flag: bytes, N: int, e: int):
     counter = 0
     while True:
@@ -52,7 +53,7 @@ def find_len(enc_flag: bytes, N: int, e: int):
         except:
             continue
 
-    i = N.bit_length() - 8 - (counter - 1)
+    i = RSA_KEYLEN - 8 - (counter - 1)
     return i, counter
 
 def find_alpha_0(alpha_0: int, N: int, e: int, enc_flag: bytes):
