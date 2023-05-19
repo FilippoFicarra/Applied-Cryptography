@@ -83,7 +83,7 @@ do
     if echo "$output" | grep "flag{$3.*}"; then
         echo "Correct!"
     else
-        echo "Not correct!!"
+        echo "$output"
         exit
     fi
 
