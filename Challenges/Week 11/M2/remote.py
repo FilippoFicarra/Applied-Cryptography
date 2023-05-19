@@ -2,7 +2,7 @@ import json
 
 from telnetlib import Telnet
 from typing import List
-
+from Crypto.Hash import SHA256
 from eccrypto import ECDSA
 
 REMOTE = True
@@ -64,6 +64,8 @@ def get_control(tn: Telnet, d: int):
     res = json_recv(tn)
     return res
 
+import matplotlib.pyplot as plt
+
 def attack(tn: Telnet):
     """Your attack code goes here."""
 
@@ -71,6 +73,70 @@ def attack(tn: Telnet):
     print(status)
 
     # TODO ...
+    # while True:
+    debug_info = get_debug_info(tn)
+    print(debug_info)
+    timings = debug_info["timings"]
+
+    # from k we can compute d since s = (pow(k,-1, self.ec.n)*(h+self.d*r))%self.ec.n
+    msg_bytes = debug_info["msg"].encode()
+    h = int(SHA256.new(msg_bytes).digest().hex(), 16)
+    r = int(debug_info["r"], 16)
+    s = int(debug_info["s"], 16)
+
+    # we can compute k from the timings
+    # we know that r = G*k with double and add
+    # so we can compute the timings for double and add
+
+    bits = []
+    for timing in timings:
+        if timing < 35000:
+            bits.append(0)
+        else:
+            bits.append(1)
+    # reverse the bits
+    bits = bits[::-1]
+    combination = change_zero_bit_combinations(bits)
+    print(bits)
+    ks = []
+    for comb in combination:
+        k = int("".join(map(str, comb)), 2)
+        ks.append(k)
+
+
+    # now we can compute d
+    for k in ks:
+        d = ((s * k - h) * pow(r, -1, ECDSAinstance.ec.n) )% ECDSAinstance.ec.n
+
+        # now we can get the flag
+        flag = get_control(tn, d)
+        if "flag" in flag["res"]: 
+            print(flag)
+            break
+  
+
+def change_zero_bit_combinations(bits, index=0, combination=[], combinations=[]):
+    if index == len(bits):
+        combinations.append(combination[:])  # Add the generated combination to the list
+        return
+
+    if bits[index] == 0:
+        # First branch: Replace the current bit with 0
+        combination.append(0)
+        change_zero_bit_combinations(bits, index + 1, combination, combinations)
+        combination.pop()
+
+        # Second branch: Replace the current bit with 1
+        combination.append(1)
+        change_zero_bit_combinations(bits, index + 1, combination, combinations)
+        combination.pop()
+    else:
+        # The bit is already 1, keep it unchanged
+        combination.append(1)
+        change_zero_bit_combinations(bits, index + 1, combination, combinations)
+        combination.pop()
+
+    return combinations
 
 
 if __name__ == "__main__":
