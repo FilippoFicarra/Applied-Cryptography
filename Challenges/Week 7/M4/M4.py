@@ -10,7 +10,7 @@ class Solution():
     def eight_byte_encoding(self, string: str):
         # The octet string AL is equal to the number of bits in string expressed as a 64-bit unsigned integer in network byte order.
         n_bits = len(string)*8 
-        return n_bits.to_bytes(8, byteorder='big').hex()
+        return n_bits.to_bytes(8, byt1eorder='big').hex()
 
 def main():
     sol = Solution()

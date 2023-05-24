@@ -174,7 +174,7 @@ class EllipticCurvePoint(Point):
         elif bs[0] == 0x02 or bs[0] == 0x03:
             x = int.from_bytes(bs[1:], 'big')
             y_squared = (pow(x, 3, curve.p) + curve.a * x + curve.b) % curve.p
-            y = pow(y_squared, (curve.p + 1) // 4, curve.p)
+            y = modsqrt.modular_sqrt(y_squared, curve.p)#pow(y_squared, (curve.p + 1) // 4, curve.p)
             if (bs[0] == 0x02 and y % 2 == 0) or (bs[0] == 0x03 and y % 2 == 1):
                 return EllipticCurvePoint(curve, x, y)
             else:
@@ -222,6 +222,9 @@ class ECDSA:
             h = int.from_bytes(h, 'big')
             r = int.from_bytes(r_bytes, 'big')
             s = int.from_bytes(s_bytes, 'big')
+            # if r < 1 or r > self.ec.n-1 or s < 1 or s > self.ec.n-1:
+            #     print("r or s is not in the range")
+            #     return False
             public_point = EllipticCurvePoint.from_bytes(self.ec, public_point_bytes)
             u1 = (pow(s,-1, self.ec.n)*h)%self.ec.n
             u2 = (pow(s,-1, self.ec.n)*r)%self.ec.n

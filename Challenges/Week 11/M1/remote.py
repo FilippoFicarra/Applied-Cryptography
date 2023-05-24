@@ -81,9 +81,6 @@ def attack(tn: Telnet):
     challenges = challenge["challenge"]
     ECDSAinstance = ECDSA()
 
-    point = EllipticCurvePoint.from_bytes(ECDSAinstance.ec, bytes.fromhex(public_point))
-    # print(public_point)
-    # print(public_y)
 
     # 2. Solve the challenge
     bools = []
